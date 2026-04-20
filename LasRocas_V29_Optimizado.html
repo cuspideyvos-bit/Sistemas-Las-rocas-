@@ -1,0 +1,2849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cabañas Las Rocas — Sistema Premium V29</title>
+  <meta name="description" content="Sistema de gestión integral para Cabañas Las Rocas, San Rafael, Mendoza." />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(100%); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-enter { animation: fadeIn .2s ease-out; }
+    * { transition: background-color .15s ease, border-color .15s ease; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useMemo } = React;
+
+
+    // ===== ICONOS LUCIDE (SVG inline) =====
+    function LucideIcon({ size=24, className='', children, ...rest }) {
+      return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...rest}>{children}</svg>;
+    }
+    const ChevronLeft  = ({size=24,className=''}) => <LucideIcon size={size} className={className}><polyline points="15 18 9 12 15 6"/></LucideIcon>;
+    const ChevronRight = ({size=24,className=''}) => <LucideIcon size={size} className={className}><polyline points="9 18 15 12 9 6"/></LucideIcon>;
+    const Plus         = ({size=24,className=''}) => <LucideIcon size={size} className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></LucideIcon>;
+    const Edit2        = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></LucideIcon>;
+    const Trash2       = ({size=24,className=''}) => <LucideIcon size={size} className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></LucideIcon>;
+    const Download     = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></LucideIcon>;
+    const LogOut       = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></LucideIcon>;
+    const Calendar     = ({size=24,className=''}) => <LucideIcon size={size} className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></LucideIcon>;
+    const Users        = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></LucideIcon>;
+    const DollarSign   = ({size=24,className=''}) => <LucideIcon size={size} className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></LucideIcon>;
+    const MapPin       = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></LucideIcon>;
+    const AlertCircle  = ({size=24,className=''}) => <LucideIcon size={size} className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></LucideIcon>;
+    const Search       = ({size=24,className=''}) => <LucideIcon size={size} className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></LucideIcon>;
+    const X            = ({size=24,className=''}) => <LucideIcon size={size} className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></LucideIcon>;
+    const Filter       = ({size=24,className=''}) => <LucideIcon size={size} className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></LucideIcon>;
+    const TrendingUp   = ({size=24,className=''}) => <LucideIcon size={size} className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></LucideIcon>;
+    const PieChart     = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></LucideIcon>;
+    const BarChart3    = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></LucideIcon>;
+    const Moon         = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></LucideIcon>;
+    const Sun          = ({size=24,className=''}) => <LucideIcon size={size} className={className}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></LucideIcon>;
+    const FileText     = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></LucideIcon>;
+    const Tag          = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></LucideIcon>;
+    const Clock        = ({size=24,className=''}) => <LucideIcon size={size} className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></LucideIcon>;
+    const CheckCircle  = ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></LucideIcon>;
+    const XCircle      = ({size=24,className=''}) => <LucideIcon size={size} className={className}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></LucideIcon>;
+    const AlertTriangle= ({size=24,className=''}) => <LucideIcon size={size} className={className}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></LucideIcon>;
+
+
+
+function SistemaLasRocas() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [currentUser, setCurrentUser] = useState('');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [mesesPorCabana, setMesesPorCabana] = useState({
+    1: new Date(), 2: new Date(), 3: new Date(), 4: new Date(), 5: new Date(),
+    6: new Date(), 7: new Date(), 8: new Date(), 9: new Date()
+  });
+  const [reservas, setReservas] = useState([]);
+  const [gastos, setGastos] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState('dashboard'); // Ahora inicia en dashboard
+  const [loading, setLoading] = useState(true);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+  const [alertMessage, setAlertMessage] = useState({ show: false, type: '', message: '' });
+  const [showRestoreBackup, setShowRestoreBackup] = useState(false);
+  const [backupFile, setBackupFile] = useState(null);
+  const [backupPreview, setBackupPreview] = useState(null);
+  const [showFormGasto, setShowFormGasto] = useState(false);
+  const [gastoMesActual, setGastoMesActual] = useState(null);
+  const [rangoFechas, setRangoFechas] = useState({ desde: '', hasta: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({ cabaña: 'todas', estado: 'todos' });
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem('las_rocas_darkmode') === 'true'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    document.body.style.backgroundColor = darkMode ? '#111827' : '#f9fafb';
+    try { localStorage.setItem('las_rocas_darkmode', darkMode); } catch {}
+  }, [darkMode]);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [currentReservaForNotes, setCurrentReservaForNotes] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({ show: false, id: null, nombre: '', cabana: '' });
+  const [tarifas, setTarifas] = useState({
+    temporadaAlta: 120000,
+    temporadaMedia: 90000,
+    temporadaBaja: 70000
+  });
+  
+  const initialFormData = {
+    cabaña: 1,
+    fechaEntrada: '',
+    fechaSalida: '',
+    fechaSalidaReal: '',
+    clienteNombre: '',
+    clienteContacto: '',
+    cantidadPersonas: 1,
+    precioPorDia: 90000,
+    pagado: false,
+    pagoACuenta: false,
+    montoPagado: 0,
+    metodoPagoACuenta: '',
+    metodoPago: '',
+    notas: '',
+    tags: [],
+    rating: 0,
+    temporada: 'media'
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  const categoriasGastos = [
+    'Luz', 'Agua', 'Gas', 'Impuesto Municipal', 'Impuesto Provincial',
+    'Gastos Bancarios', 'Limpieza', 'Habilitaciones', 'Jardinería',
+    'Inversiones', 'Mantenimiento', 'Mermas y Roturas'
+  ];
+
+  const tagsDisponibles = ['VIP', 'Frecuente', 'Corporativo', 'Familia', 'Pareja', 'Grupo'];
+  const temporadas = ['alta', 'media', 'baja'];
+
+  const loadUsuarios = () => {
+    try {
+      const stored = localStorage.getItem('las_rocas_usuarios');
+      return stored ? JSON.parse(stored) : { Roberto: 'Roberto1908' };
+    } catch {
+      return { Roberto: 'Roberto1908' };
+    }
+  };
+
+  const [usuarios, setUsuarios] = useState(loadUsuarios());
+
+  const showAlert = (type, message) => {
+    setAlertMessage({ show: true, type, message });
+    setTimeout(() => setAlertMessage({ show: false, type: '', message: '' }), 5000);
+  };
+
+  const generarColorAleatorio = (id) => {
+    const colores = [
+      'from-red-500 to-red-700', 'from-orange-500 to-orange-700', 'from-amber-500 to-amber-700',
+      'from-yellow-500 to-yellow-700', 'from-lime-500 to-lime-700', 'from-green-500 to-green-700',
+      'from-emerald-500 to-emerald-700', 'from-teal-500 to-teal-700', 'from-cyan-500 to-cyan-700',
+      'from-sky-500 to-sky-700', 'from-blue-500 to-blue-700', 'from-indigo-500 to-indigo-700',
+      'from-violet-500 to-violet-700', 'from-purple-500 to-purple-700', 'from-fuchsia-500 to-fuchsia-700',
+      'from-pink-500 to-pink-700', 'from-rose-500 to-rose-700'
+    ];
+    return colores[id % colores.length];
+  };
+
+  const formatearFecha = (fecha) => {
+    if (!fecha) return '';
+    const [year, month, day] = fecha.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatearMoneda = (valor) => {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(valor);
+  };
+
+  useEffect(() => {
+    try {
+      const resultado = localStorage.getItem('las_rocas_data_v29');
+      if (resultado) setReservas(JSON.parse(resultado));
+      const resultadoGastos = localStorage.getItem('las_rocas_gastos_v29');
+      if (resultadoGastos) setGastos(JSON.parse(resultadoGastos));
+      const resultadoTarifas = localStorage.getItem('las_rocas_tarifas');
+      if (resultadoTarifas) setTarifas(JSON.parse(resultadoTarifas));
+    } catch (e) {
+      console.warn('Error al cargar datos:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      try {
+        localStorage.setItem('las_rocas_data_v29', JSON.stringify(reservas));
+      } catch (e) {
+        console.warn('Error guardando reservas:', e);
+      }
+    }
+  }, [reservas, loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      try {
+        localStorage.setItem('las_rocas_gastos_v29', JSON.stringify(gastos));
+      } catch (e) {
+        console.warn('Error guardando gastos:', e);
+      }
+    }
+  }, [gastos, loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      try {
+        localStorage.setItem('las_rocas_tarifas', JSON.stringify(tarifas));
+      } catch (e) {
+        console.warn('Error guardando tarifas:', e);
+      }
+    }
+  }, [tarifas, loading]);
+
+  const handleLogin = () => {
+    const usuariosActuales = loadUsuarios();
+    if (usuariosActuales[username] === password) {
+      setLoggedIn(true);
+      setCurrentUser(username);
+      showAlert('success', `✅ Bienvenido ${username}!`);
+    } else {
+      showAlert('error', '❌ Usuario o contraseña incorrectos');
+    }
+  };
+
+  const handleChangePassword = () => {
+    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+      showAlert('error', '⚠️ Completa todos los campos');
+      return;
+    }
+
+    if (usuarios[currentUser] !== passwordForm.current) {
+      showAlert('error', '❌ Contraseña actual incorrecta');
+      return;
+    }
+
+    if (passwordForm.new !== passwordForm.confirm) {
+      showAlert('error', '❌ Las contraseñas nuevas no coinciden');
+      return;
+    }
+
+    if (passwordForm.new.length < 6) {
+      showAlert('error', '⚠️ La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    const nuevosUsuarios = { ...usuarios, [currentUser]: passwordForm.new };
+    setUsuarios(nuevosUsuarios);
+    localStorage.setItem('las_rocas_usuarios', JSON.stringify(nuevosUsuarios));
+    
+    setPasswordForm({ current: '', new: '', confirm: '' });
+    setShowChangePassword(false);
+    showAlert('success', '✅ Contraseña cambiada exitosamente');
+  };
+
+  const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+
+  const calcularDias = (fechaEntrada, fechaSalida) => {
+    if (!fechaEntrada || !fechaSalida) return 0;
+    const entrada = new Date(fechaEntrada);
+    const salida = new Date(fechaSalida);
+    const dias = Math.ceil((salida - entrada) / (1000 * 60 * 60 * 24)) + 1;
+    return dias;
+  };
+
+  const calcularImporteTotal = () => {
+    const dias = calcularDias(formData.fechaEntrada, formData.fechaSalida);
+    return dias * formData.precioPorDia;
+  };
+
+  const calcularTotal = (reserva) => {
+    const entrada = new Date(reserva.fechaEntrada);
+    const salida = new Date(reserva.fechaSalida);
+    const dias = Math.ceil((salida - entrada) / (1000 * 60 * 60 * 24)) + 1;
+    return dias * reserva.precioPorDia;
+  };
+
+  const getGastosMes = () => {
+    const mes = currentMonth.getMonth();
+    const ano = currentMonth.getFullYear();
+    const key = `${ano}-${String(mes + 1).padStart(2, '0')}`;
+    return gastos.find(g => g.mesAno === key) || null;
+  };
+
+  const calcularTotalGastos = () => {
+    const gastoMes = getGastosMes();
+    if (!gastoMes) return 0;
+    return Object.values(gastoMes.categorias).reduce((sum, val) => sum + (val || 0), 0);
+  };
+
+  const calcularEstadisticas = () => {
+    const mes = currentMonth.getMonth();
+    const ano = currentMonth.getFullYear();
+    
+    const reservasDelMes = reservas.filter(r => {
+      const inicio = new Date(r.fechaEntrada);
+      const fin = new Date(r.fechaSalida);
+      return (inicio.getMonth() === mes && inicio.getFullYear() === ano) ||
+             (fin.getMonth() === mes && fin.getFullYear() === ano) ||
+             (inicio < new Date(ano, mes, 1) && fin > new Date(ano, mes + 1, 0));
+    });
+
+    let totalPagado = 0;
+    let totalPendiente = 0;
+
+    reservasDelMes.forEach(r => {
+      const total = calcularTotal(r);
+      if (r.pagado) totalPagado += total;
+      else totalPendiente += total;
+    });
+
+    return {
+      total: reservasDelMes.length,
+      pagadas: reservasDelMes.filter(r => r.pagado).length,
+      pendientes: reservasDelMes.filter(r => !r.pagado).length,
+      montoPagado: totalPagado,
+      montoPendiente: totalPendiente,
+      montoTotal: totalPagado + totalPendiente,
+      reservas: reservasDelMes
+    };
+  };
+
+  const calcularEstadisticasRango = () => {
+    if (!rangoFechas.desde || !rangoFechas.hasta) {
+      return calcularEstadisticas();
+    }
+
+    const [anoDesde, mesDesde] = rangoFechas.desde.split('-');
+    const [anoHasta, mesHasta] = rangoFechas.hasta.split('-');
+    
+    const desde = new Date(parseInt(anoDesde), parseInt(mesDesde) - 1, 1);
+    const hasta = new Date(parseInt(anoHasta), parseInt(mesHasta), 0);
+
+    const reservasDelRango = reservas.filter(r => {
+      const inicio = new Date(r.fechaEntrada);
+      const fin = new Date(r.fechaSalida);
+      return (inicio >= desde && inicio <= hasta) ||
+             (fin >= desde && fin <= hasta) ||
+             (inicio < desde && fin > hasta);
+    });
+
+    let totalPagado = 0;
+    let totalPendiente = 0;
+
+    reservasDelRango.forEach(r => {
+      const total = calcularTotal(r);
+      if (r.pagado) totalPagado += total;
+      else totalPendiente += total;
+    });
+
+    return {
+      total: reservasDelRango.length,
+      pagadas: reservasDelRango.filter(r => r.pagado).length,
+      pendientes: reservasDelRango.filter(r => !r.pagado).length,
+      montoPagado: totalPagado,
+      montoPendiente: totalPendiente,
+      montoTotal: totalPagado + totalPendiente,
+      reservas: reservasDelRango
+    };
+  };
+
+  const calcularGastosRango = () => {
+    if (!rangoFechas.desde || !rangoFechas.hasta) {
+      return calcularTotalGastos();
+    }
+
+    const [anoDesde, mesDesde] = rangoFechas.desde.split('-');
+    const [anoHasta, mesHasta] = rangoFechas.hasta.split('-');
+    
+    const desde = new Date(parseInt(anoDesde), parseInt(mesDesde) - 1, 1);
+    const hasta = new Date(parseInt(anoHasta), parseInt(mesHasta) - 1, 1);
+    
+    let total = 0;
+    gastos.forEach(g => {
+      const [ano, mes] = g.mesAno.split('-');
+      const fechaGasto = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+      
+      if (fechaGasto >= desde && fechaGasto <= hasta) {
+        total += Object.values(g.categorias).reduce((sum, val) => sum + (val || 0), 0);
+      }
+    });
+    
+    return total;
+  };
+
+  const calcularGananciaReal = () => {
+    const stats = rangoFechas.desde && rangoFechas.hasta ? calcularEstadisticasRango() : calcularEstadisticas();
+    const totalGastos = rangoFechas.desde && rangoFechas.hasta ? calcularGastosRango() : calcularTotalGastos();
+    return stats.montoPagado - totalGastos;
+  };
+
+  const calcularOcupacionPorCabana = () => {
+    const cabañasArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    return cabañasArray.map(num => {
+      const reservasCabana = reservas.filter(r => r.cabaña === num);
+      const totalNoches = reservasCabana.reduce((sum, r) => sum + calcularDias(r.fechaEntrada, r.fechaSalida), 0);
+      return { cabaña: num, noches: totalNoches, reservas: reservasCabana.length };
+    });
+  };
+
+  const calcularIngresoPorCabana = () => {
+    const cabañasArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    return cabañasArray.map(num => {
+      const reservasCabana = reservas.filter(r => r.cabaña === num && r.pagado);
+      const totalIngreso = reservasCabana.reduce((sum, r) => sum + calcularTotal(r), 0);
+      return { cabaña: num, ingreso: totalIngreso };
+    });
+  };
+
+  const handleSaveGasto = () => {
+    const mes = currentMonth.getMonth();
+    const ano = currentMonth.getFullYear();
+    const key = `${ano}-${String(mes + 1).padStart(2, '0')}`;
+    
+    const nuevosGastos = gastos.filter(g => g.mesAno !== key);
+    if (gastoMesActual) {
+      nuevosGastos.push({ mesAno: key, categorias: gastoMesActual });
+    }
+    
+    setGastos(nuevosGastos);
+    setShowFormGasto(false);
+    showAlert('success', '✅ Gastos guardados exitosamente');
+  };
+
+  const handleAddReserva = () => {
+    if (!formData.clienteNombre || !formData.fechaEntrada || !formData.fechaSalida) {
+      showAlert('error', '⚠️ Completa: Cliente, Fecha Entrada y Fecha Salida');
+      return;
+    }
+
+    if (new Date(formData.fechaSalida) <= new Date(formData.fechaEntrada)) {
+      showAlert('error', '⚠️ La fecha fin debe ser posterior al inicio');
+      return;
+    }
+
+    const conflicto = reservas.find(r => {
+      if (editingId && r.id === editingId) return false;
+      if (r.cabaña !== formData.cabaña) return false;
+      
+      const nInicio = new Date(formData.fechaEntrada).getTime();
+      const nFin = new Date(formData.fechaSalida).getTime();
+      const eInicio = new Date(r.fechaEntrada).getTime();
+      const eFin = new Date(r.fechaSalida).getTime();
+      
+      return (nInicio < eFin && nFin > eInicio);
+    });
+
+    if (conflicto) {
+      showAlert('error', `🚫 ¡CABAÑA OCUPADA!\n\nLa Cabaña ${formData.cabaña} ya está reservada por: ${conflicto.clienteNombre}\n\nDesde: ${conflicto.fechaEntrada}\nHasta: ${conflicto.fechaSalida}\n\nPor favor elige otras fechas u otra cabaña.`);
+      return;
+    }
+
+    let nuevas;
+    if (editingId) {
+      nuevas = reservas.map(r => r.id === editingId ? { ...formData, id: editingId, fechaModificacion: new Date().toISOString() } : r);
+    } else {
+      nuevas = [...reservas, { ...formData, id: Date.now(), fechaCreacion: new Date().toISOString() }];
+    }
+    
+    setReservas(nuevas);
+    setEditingId(null);
+    setFormData(initialFormData);
+    setShowForm(false);
+    showAlert('success', '✅ Reserva guardada exitosamente');
+  };
+
+  const handleEditReserva = (reserva) => {
+    setFormData(reserva);
+    setEditingId(reserva.id);
+    setShowForm(true);
+  };
+
+  const handleDeleteReserva = useCallback((id) => {
+    const r = reservas.find(x => x.id === id);
+    if (!r) return;
+    setConfirmDelete({ show: true, id, nombre: r.clienteNombre, cabana: r.cabaña });
+  }, [reservas]);
+
+  const confirmarBorrado = useCallback(() => {
+    setReservas(prev => prev.filter(r => r.id !== confirmDelete.id));
+    setConfirmDelete({ show: false, id: null, nombre: '', cabana: '' });
+    showAlert('success', '✅ Reserva eliminada');
+  }, [confirmDelete.id]);
+
+  const isDateInRange = (date, fechaEntrada, fechaSalida) => {
+    const d = new Date(date).setHours(0,0,0,0);
+    const inicio = new Date(fechaEntrada).setHours(0,0,0,0);
+    const fin = new Date(fechaSalida).setHours(0,0,0,0);
+    return d >= inicio && d <= fin;
+  };
+
+  const getReservaForDay = (dia, cabana) => {
+    const y = currentMonth.getFullYear();
+    const m = String(currentMonth.getMonth() + 1).padStart(2, '0');
+    const d = String(dia).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+    return reservas.find(r => r.cabaña === cabana && isDateInRange(dateStr, r.fechaEntrada, r.fechaSalida));
+  };
+
+  const getProximasDesocupaciones = () => {
+    const hoy = new Date().setHours(0,0,0,0);
+    const en7dias = new Date();
+    en7dias.setDate(en7dias.getDate() + 7);
+    en7dias.setHours(0,0,0,0);
+
+    return reservas.filter(r => {
+      const fin = new Date(r.fechaSalida).setHours(0,0,0,0);
+      return fin >= hoy && fin <= en7dias;
+    }).sort((a, b) => new Date(a.fechaSalida) - new Date(b.fechaSalida));
+  };
+
+  const getReservasFiltradas = () => {
+    return reservas.filter(r => {
+      const matchSearch = searchTerm === '' || 
+        r.clienteNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.clienteContacto?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchCabana = filters.cabaña === 'todas' || r.cabaña === parseInt(filters.cabaña);
+      
+      const matchEstado = filters.estado === 'todos' || 
+        (filters.estado === 'pagado' && r.pagado) ||
+        (filters.estado === 'pendiente' && !r.pagado) ||
+        (filters.estado === 'acuenta' && r.pagoACuenta && !r.pagado);
+      
+      return matchSearch && matchCabana && matchEstado;
+    });
+  };
+
+  const generateReportExcel = () => {
+    const stats = (view === 'reportes' || view === 'gastos') && rangoFechas.desde && rangoFechas.hasta 
+      ? calcularEstadisticasRango() 
+      : calcularEstadisticas();
+      
+    if (stats.total === 0) {
+      showAlert('error', 'No hay reservas en el período seleccionado');
+      return;
+    }
+
+    let periodo = '';
+    if (rangoFechas.desde && rangoFechas.hasta) {
+      const [anoD, mesD] = rangoFechas.desde.split('-');
+      const [anoH, mesH] = rangoFechas.hasta.split('-');
+      const desde = new Date(parseInt(anoD), parseInt(mesD) - 1, 1);
+      const hasta = new Date(parseInt(anoH), parseInt(mesH) - 1, 1);
+      periodo = `${desde.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })} - ${hasta.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
+    } else {
+      periodo = currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    }
+
+    // Crear CSV profesional
+    let csv = '\uFEFF'; // BOM para UTF-8
+    csv += 'CABAÑAS LAS ROCAS - REPORTE DETALLADO\n';
+    csv += `Período: ${periodo}\n`;
+    csv += `Generado: ${new Date().toLocaleString('es-AR')}\n`;
+    csv += `Usuario: ${currentUser}\n\n`;
+    
+    csv += 'RESUMEN EJECUTIVO\n';
+    csv += `Total Reservas,${stats.total}\n`;
+    csv += `Reservas Pagadas,${stats.pagadas}\n`;
+    csv += `Reservas Pendientes,${stats.pendientes}\n`;
+    csv += `Total Cobrado,${stats.montoPagado.toLocaleString('es-AR')}\n`;
+    csv += `Total Por Cobrar,${stats.montoPendiente.toLocaleString('es-AR')}\n`;
+    csv += `Total Ingresos,${stats.montoTotal.toLocaleString('es-AR')}\n`;
+    csv += `Gastos del Período,${(rangoFechas.desde && rangoFechas.hasta ? calcularGastosRango() : calcularTotalGastos()).toLocaleString('es-AR')}\n`;
+    csv += `GANANCIA NETA,${calcularGananciaReal().toLocaleString('es-AR')}\n\n`;
+    
+    csv += 'DETALLE DE RESERVAS\n';
+    csv += 'N°,Cabaña,Cliente,Contacto,Check-in,Check-out,Salida Real,Personas,Precio/Día,Días,Total,Pagado,Resto,Estado,Método Pago,Tags,Notas\n';
+    
+    stats.reservas.forEach((r, i) => {
+      const dias = calcularDias(r.fechaEntrada, r.fechaSalida);
+      const total = calcularTotal(r);
+      const pagado = r.montoPagado || 0;
+      const resto = total - pagado;
+      const estado = r.pagado ? 'PAGADO' : (r.pagoACuenta ? 'A CUENTA' : 'PENDIENTE');
+      
+      csv += `${i + 1},`;
+      csv += `${r.cabaña},`;
+      csv += `"${r.clienteNombre}",`;
+      csv += `"${r.clienteContacto || ''}",`;
+      csv += `${formatearFecha(r.fechaEntrada)},`;
+      csv += `${formatearFecha(r.fechaSalida)},`;
+      csv += `${r.fechaSalidaReal ? formatearFecha(r.fechaSalidaReal) : ''},`;
+      csv += `${r.cantidadPersonas},`;
+      csv += `${r.precioPorDia.toLocaleString('es-AR')},`;
+      csv += `${dias},`;
+      csv += `${total.toLocaleString('es-AR')},`;
+      csv += `${pagado.toLocaleString('es-AR')},`;
+      csv += `${resto.toLocaleString('es-AR')},`;
+      csv += `${estado},`;
+      csv += `"${r.metodoPago || r.metodoPagoACuenta || ''}",`;
+      csv += `"${r.tags ? r.tags.join(', ') : ''}",`;
+      csv += `"${r.notas ? r.notas.replace(/"/g, '""') : ''}"\n`;
+    });
+
+    // Agregar estadísticas por cabaña
+    csv += '\n\nESTADÍSTICAS POR CABAÑA\n';
+    csv += 'Cabaña,Reservas,Noches,Ingresos\n';
+    
+    const ocupacionCabanas = calcularOcupacionPorCabana();
+    const ingresosCabanas = calcularIngresoPorCabana();
+    
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(num => {
+      const ocup = ocupacionCabanas.find(o => o.cabaña === num);
+      const ing = ingresosCabanas.find(i => i.cabaña === num);
+      csv += `${num},${ocup?.reservas || 0},${ocup?.noches || 0},${(ing?.ingreso || 0).toLocaleString('es-AR')}\n`;
+    });
+
+    try {
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const fechaDescarga = rangoFechas.desde && rangoFechas.hasta 
+        ? `${rangoFechas.desde}_${rangoFechas.hasta}`
+        : `${currentMonth.getFullYear()}_${currentMonth.getMonth() + 1}`;
+      a.download = `LasRocas_Reporte_${fechaDescarga}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showAlert('success', '✅ Reporte Excel descargado');
+    } catch (error) {
+      showAlert('error', '❌ Error al generar Excel');
+      console.error('Error:', error);
+    }
+  };
+
+  const generateReportPDF = () => {
+    const stats = (view === 'reportes' || view === 'gastos') && rangoFechas.desde && rangoFechas.hasta 
+      ? calcularEstadisticasRango() 
+      : calcularEstadisticas();
+      
+    if (stats.total === 0) {
+      showAlert('error', 'No hay reservas en el período seleccionado');
+      return;
+    }
+
+    let periodo = '';
+    if (rangoFechas.desde && rangoFechas.hasta) {
+      const [anoD, mesD] = rangoFechas.desde.split('-');
+      const [anoH, mesH] = rangoFechas.hasta.split('-');
+      const desde = new Date(parseInt(anoD), parseInt(mesD) - 1, 1);
+      const hasta = new Date(parseInt(anoH), parseInt(mesH) - 1, 1);
+      periodo = `${desde.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })} - ${hasta.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
+    } else {
+      periodo = currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    }
+
+    // Crear HTML profesional para PDF
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      padding: 40px;
+      color: #1e293b;
+      background: white;
+    }
+    .header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .header .subtitle {
+      font-size: 18px;
+      opacity: 0.95;
+      font-weight: 600;
+    }
+    .header .info {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .metric {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid #2563eb;
+    }
+    .metric.success { border-left-color: #10b981; }
+    .metric.warning { border-left-color: #f59e0b; }
+    .metric.danger { border-left-color: #ef4444; }
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: #1e293b;
+    }
+    .financial-summary {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 2px solid #fbbf24;
+    }
+    .financial-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .financial-row:last-child { border-bottom: none; }
+    .financial-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #78350f;
+    }
+    .financial-value {
+      font-size: 20px;
+      font-weight: 900;
+      color: #78350f;
+    }
+    .financial-row.total {
+      padding-top: 15px;
+      margin-top: 10px;
+      border-top: 3px solid #78350f;
+    }
+    .financial-row.total .financial-value {
+      font-size: 32px;
+      color: #78350f;
+    }
+    .section {
+      margin-bottom: 30px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #e2e8f0;
+    }
+    .section-header {
+      background: #1e293b;
+      color: white;
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    thead {
+      background: #f1f5f9;
+    }
+    th {
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+    tr:hover {
+      background: #f8fafc;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .status-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .status-partial {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e2e8f0;
+      text-align: center;
+      color: #64748b;
+      font-size: 11px;
+    }
+    .footer-contact {
+      margin-top: 10px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .chart-container {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 10px;
+    }
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .bar-label {
+      width: 80px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .bar-container {
+      flex: 1;
+      height: 28px;
+      background: #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    @media print {
+      body { padding: 20px; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🏔️ Cabañas Las Rocas</h1>
+    <div class="subtitle">Reporte de Gestión Profesional</div>
+    <div class="info">
+      <strong>Período:</strong> ${periodo} • 
+      <strong>Generado:</strong> ${new Date().toLocaleString('es-AR')} • 
+      <strong>Usuario:</strong> ${currentUser}
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Total Reservas</div>
+      <div class="metric-value">${stats.total}</div>
+    </div>
+    <div class="metric success">
+      <div class="metric-label">Pagadas</div>
+      <div class="metric-value">${stats.pagadas}</div>
+    </div>
+    <div class="metric warning">
+      <div class="metric-label">Pendientes</div>
+      <div class="metric-value">${stats.pendientes}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Ocupación</div>
+      <div class="metric-value">${stats.total > 0 ? Math.round((stats.total / 30) * 100) : 0}%</div>
+    </div>
+  </div>
+
+  <div class="financial-summary">
+    <div class="financial-row">
+      <span class="financial-label">💰 Ingresos Cobrados</span>
+      <span class="financial-value">${stats.montoPagado.toLocaleString('es-AR')}</span>
+    </div>
+    <div class="financial-row">
+      <span class="financial-label">⏳ Por Cobrar</span>
+      <span class="financial-value">${stats.montoPendiente.toLocaleString('es-AR')}</span>
+    </div>
+    <div class="financial-row">
+      <span class="financial-label">💸 Gastos del Período</span>
+      <span class="financial-value">${(rangoFechas.desde && rangoFechas.hasta ? calcularGastosRango() : calcularTotalGastos()).toLocaleString('es-AR')}</span>
+    </div>
+    <div class="financial-row total">
+      <span class="financial-label">🎯 GANANCIA NETA</span>
+      <span class="financial-value">${calcularGananciaReal().toLocaleString('es-AR')}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📊 Ocupación por Cabaña</div>
+    <div class="chart-container">
+      <div class="bar-chart">
+        ${calcularOcupacionPorCabana().map(({ cabaña, noches }) => {
+          const maxNoches = Math.max(...calcularOcupacionPorCabana().map(c => c.noches));
+          const porcentaje = maxNoches > 0 ? (noches / maxNoches) * 100 : 0;
+          return `
+            <div class="bar-item">
+              <div class="bar-label">Cabaña ${cabaña}</div>
+              <div class="bar-container">
+                <div class="bar-fill" style="width: ${porcentaje}%">${noches} noches</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">📋 Detalle de Reservas</div>
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Cabaña</th>
+          <th>Cliente</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Días</th>
+          <th>Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${stats.reservas.map((r, i) => {
+          const dias = calcularDias(r.fechaEntrada, r.fechaSalida);
+          const total = calcularTotal(r);
+          const statusClass = r.pagado ? 'status-paid' : (r.pagoACuenta ? 'status-partial' : 'status-pending');
+          const statusText = r.pagado ? 'PAGADO' : (r.pagoACuenta ? 'A CUENTA' : 'PENDIENTE');
+          
+          return `
+            <tr>
+              <td><strong>${i + 1}</strong></td>
+              <td><strong>${r.cabaña}</strong></td>
+              <td><strong>${r.clienteNombre}</strong><br><small style="color: #64748b;">${r.clienteContacto || ''}</small></td>
+              <td>${formatearFecha(r.fechaEntrada)}</td>
+              <td>${formatearFecha(r.fechaSalida)}</td>
+              <td><strong>${dias}</strong></td>
+              <td><strong>${total.toLocaleString('es-AR')}</strong></td>
+              <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <strong>Cabañas Las Rocas Premium V29</strong> - Sistema de Gestión Integral
+    <div class="footer-contact">
+      📍 Cangallo s/n, San Rafael, Mendoza • 📧 info@cabanaslasrocas.com.ar • 📱 +54 9 2604 599919
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    try {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const fechaDescarga = rangoFechas.desde && rangoFechas.hasta 
+        ? `${rangoFechas.desde}_${rangoFechas.hasta}`
+        : `${currentMonth.getFullYear()}_${currentMonth.getMonth() + 1}`;
+      a.download = `LasRocas_Reporte_${fechaDescarga}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Abrir en nueva ventana para imprimir/guardar como PDF
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(html);
+      printWindow.document.close();
+      
+      showAlert('success', '✅ Reporte PDF generado. Usa Ctrl+P para guardar como PDF');
+    } catch (error) {
+      showAlert('error', '❌ Error al generar PDF');
+      console.error('Error:', error);
+    }
+  };
+
+  const generarBackupCompleto = async () => {
+    try {
+      // Recopilar todos los datos del sistema
+      const backup = {
+        version: 'V29',
+        fecha: new Date().toISOString(),
+        usuario: currentUser,
+        reservas: reservas,
+        gastos: gastos,
+        tarifas: tarifas,
+        usuarios: usuarios
+      };
+
+      const dataStr = JSON.stringify(backup, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const fecha = new Date().toISOString().split('T')[0];
+      a.download = `LasRocas_Backup_${fecha}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showAlert('success', `✅ Backup guardado exitosamente!\n\nArchivo: LasRocas_Backup_${fecha}.json\n\n${reservas.length} reservas\n${gastos.length} registros de gastos`);
+    } catch (error) {
+      showAlert('error', '❌ Error al crear el backup');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const backup = JSON.parse(e.target.result);
+        
+        // Validar que sea un backup válido
+        if (!backup.version || !backup.reservas || !backup.gastos) {
+          showAlert('error', '❌ Archivo inválido. No es un backup de Las Rocas.');
+          return;
+        }
+
+        setBackupFile(file);
+        setBackupPreview({
+          version: backup.version,
+          fecha: backup.fecha,
+          usuario: backup.usuario,
+          cantidadReservas: backup.reservas.length,
+          cantidadGastos: backup.gastos.length
+        });
+        setShowRestoreBackup(true);
+      } catch (error) {
+        showAlert('error', '❌ Error al leer el archivo. Asegurate que sea un archivo JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const restaurarBackup = async () => {
+    if (!backupFile) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const backup = JSON.parse(e.target.result);
+        
+        // Restaurar todos los datos
+        setReservas(backup.reservas || []);
+        setGastos(backup.gastos || []);
+        setTarifas(backup.tarifas || tarifas);
+        
+        if (backup.usuarios) {
+          setUsuarios(backup.usuarios);
+          localStorage.setItem('las_rocas_usuarios', JSON.stringify(backup.usuarios));
+        }
+
+        // Guardar en storage
+        localStorage.setItem('las_rocas_data_v29', JSON.stringify(backup.reservas || []));
+        localStorage.setItem('las_rocas_gastos_v29', JSON.stringify(backup.gastos || []));
+        localStorage.setItem('las_rocas_tarifas', JSON.stringify(backup.tarifas || tarifas));
+
+        setShowRestoreBackup(false);
+        setBackupFile(null);
+        setBackupPreview(null);
+        
+        showAlert('success', `✅ Backup restaurado exitosamente!\n\n${backup.reservas.length} reservas cargadas\n${backup.gastos.length} registros de gastos cargados\n\n¡Todos los datos están listos!`);
+      } catch (error) {
+        showAlert('error', '❌ Error al restaurar el backup');
+        console.error('Error:', error);
+      }
+    };
+    reader.readAsText(backupFile);
+  };
+
+  if (loading) {
+    return (
+      <div className={`flex items-center justify-center min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-600 to-blue-800'} text-white`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-white mx-auto mb-4"></div>
+          <p className="text-2xl font-bold">Cargando Sistema...</p>
+          <p className="text-sm opacity-75 mt-2">Las Rocas V29 Premium</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loggedIn) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-600 to-blue-900">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md transform hover:scale-105 transition-transform duration-300">
+          <div className="text-center mb-8">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 mb-4 shadow-lg">
+              <div className="border-4 border-white rounded-xl p-4 mb-2">
+                <p className="text-white text-3xl font-black">LAS ROCAS</p>
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <div className="h-1 w-16 bg-white"></div>
+                <p className="text-white text-xl font-bold">CABAÑAS</p>
+                <div className="h-1 w-16 bg-white"></div>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800">Sistema Premium V29</h1>
+            <p className="text-gray-500">San Rafael, Mendoza</p>
+            <p className="text-xs text-gray-400 mt-2">🚀 Versión Profesional Completa</p>
+          </div>
+          
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+            />
+            <button
+              onClick={handleLogin}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-[1.02]"
+            >
+              Ingresar al Sistema
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const proximasDesocupaciones = getProximasDesocupaciones();
+  const cabañasArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const diasSemana = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const stats = (view === 'reportes' || view === 'gastos') && rangoFechas.desde && rangoFechas.hasta 
+    ? calcularEstadisticasRango() 
+    : calcularEstadisticas();
+  const reservasFiltradas = getReservasFiltradas();
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} pb-20 transition-colors duration-300`}>
+      {alertMessage.show && (
+        <div className="fixed top-4 right-4 z-[60]" style={{animation:'slideIn .3s ease-out'}}>
+          <div className={`${alertMessage.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'} text-white px-5 py-4 rounded-2xl shadow-2xl max-w-xs border border-white/20`}>
+            <div className="flex items-start gap-3">
+              <span className="text-xl flex-shrink-0">{alertMessage.type === 'error' ? '⚠️' : '✅'}</span>
+              <p className="font-semibold text-sm whitespace-pre-line leading-relaxed">{alertMessage.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER PREMIUM */}
+      <div className={`${darkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-gradient-to-r from-blue-600 to-blue-700'} text-white shadow-xl sticky top-0 z-20`}>
+        <div className="max-w-7xl mx-auto p-3">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-3">
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-white/20'} backdrop-blur-sm p-2 rounded-lg`}>
+                <p className="text-sm font-black">LAS ROCAS</p>
+              </div>
+              <div>
+                <h1 className="text-base font-bold flex items-center gap-2">
+                  Sistema Premium V29
+                  <span className="text-xs bg-yellow-400 text-gray-900 px-2 py-0.5 rounded-full font-black">PRO</span>
+                </h1>
+                <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-blue-100'}`}>San Rafael • {new Date().toLocaleDateString('es-ES')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <label 
+                htmlFor="restore-backup-input"
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-white/20'} rounded-lg transition-all cursor-pointer`} 
+                title="📂 Restaurar Backup (Cargar datos)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </label>
+              <input
+                id="restore-backup-input"
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <button 
+                onClick={generarBackupCompleto} 
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-white/20'} rounded-lg transition-all`} 
+                title="💾 Backup - Guardar todo"
+              >
+                <Download size={18} />
+              </button>
+              <button 
+                onClick={() => setDarkMode(!darkMode)} 
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-white/20'} rounded-lg transition-all`} 
+                title={darkMode ? "Modo claro" : "Modo oscuro"}
+              >
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+              <button 
+                onClick={() => setShowChangePassword(true)} 
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-white/20'} rounded-lg transition-all`} 
+                title="Cambiar contraseña"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </button>
+              <span className="text-sm font-semibold">{currentUser}</span>
+              <button 
+                onClick={() => {
+                  setLoggedIn(false);
+                  showAlert('success', '👋 Sesión cerrada');
+                }} 
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-white/20'} rounded-lg transition-all`}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Información de contacto */}
+          <div className={`${darkMode ? 'bg-gray-700/50' : 'bg-white/15'} backdrop-blur-sm rounded-lg p-2 text-xs space-y-1 text-white`}>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+              <a href="mailto:info@cabanaslasrocas.com.ar" className="hover:underline">info@cabanaslasrocas.com.ar</a>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin size={14} />
+              <button onClick={() => window.open('https://maps.google.com/?q=Cangallo+San+Rafael+Mendoza', '_blank')} className="hover:underline text-left">
+                Cangallo s/n (300m de Ballofet), San Rafael
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              <a href="https://wa.me/5492604599919" target="_blank" className="hover:underline">+54 9 2604 599919</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* NAVEGACIÓN MEJORADA CON BÚSQUEDA */}
+      <div className={`sticky top-28 z-10 ${darkMode ? 'bg-gray-800 border-b border-gray-700' : 'bg-white shadow-lg border-b-2 border-blue-100'}`}>
+        <div className="max-w-7xl mx-auto p-2">
+          <div className="flex flex-wrap gap-2 mb-2">
+            <button 
+              onClick={() => setView('dashboard')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'dashboard' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <TrendingUp size={20} /> Dashboard
+            </button>
+            <button 
+              onClick={() => setView('calendario')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'calendario' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <Calendar size={20} /> Calendario
+            </button>
+            <button 
+              onClick={() => setView('reservas')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'reservas' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <Users size={20} /> Reservas
+            </button>
+            <button 
+              onClick={() => setView('reportes')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'reportes' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              <BarChart3 size={20} /> Reportes
+            </button>
+            <button 
+              onClick={() => setView('gastos')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'gastos' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              💸 Gastos
+            </button>
+            <button 
+              onClick={() => setView('pendientes')} 
+              className={`flex-1 min-w-[140px] py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                view === 'pendientes' 
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-md' 
+                  : darkMode 
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              💰 Pendientes
+            </button>
+          </div>
+
+          {/* BARRA DE BÚSQUEDA Y FILTROS */}
+          {view === 'reservas' && (
+            <div className="flex gap-2 mb-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Buscar por cliente o contacto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all ${
+                  showFilters 
+                    ? 'bg-blue-500 text-white' 
+                    : darkMode 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                <Filter size={18} />
+                Filtros
+              </button>
+            </div>
+          )}
+
+          {/* PANEL DE FILTROS */}
+          {view === 'reservas' && showFilters && (
+            <div className={`${darkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg p-3 mb-2`}>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`text-xs font-bold block mb-1 ${darkMode ? 'text-gray-300' : 'text-blue-800'}`}>Cabaña</label>
+                  <select
+                    value={filters.cabaña}
+                    onChange={(e) => setFilters({ ...filters, cabaña: e.target.value })}
+                    className={`w-full p-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-blue-200'} border-2 rounded-lg text-sm`}
+                  >
+                    <option value="todas">Todas las cabañas</option>
+                    {cabañasArray.map(num => (
+                      <option key={num} value={num}>Cabaña {num}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={`text-xs font-bold block mb-1 ${darkMode ? 'text-gray-300' : 'text-blue-800'}`}>Estado de Pago</label>
+                  <select
+                    value={filters.estado}
+                    onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+                    className={`w-full p-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-blue-200'} border-2 rounded-lg text-sm`}
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="pagado">Pagado</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="acuenta">A cuenta</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ACCESO RÁPIDO A CABAÑAS */}
+        {(view === 'calendario' || view === 'reservas') && (
+          <div className={`${darkMode ? 'bg-gray-700' : 'bg-gradient-to-r from-blue-50 to-blue-100'} border-t-2 ${darkMode ? 'border-gray-600' : 'border-blue-200'}`}>
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-blue-800'} font-bold mb-2 text-center`}>⚡ Acceso Rápido a Cabañas:</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {cabañasArray.map(num => {
+                  const tieneReservasHoy = reservas.some(r => {
+                    const hoy = new Date();
+                    const inicio = new Date(r.fechaEntrada);
+                    const fin = new Date(r.fechaSalida);
+                    return r.cabaña === num && hoy >= inicio && hoy <= fin;
+                  });
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => {
+                        const elemento = document.getElementById(`cabana-${num}`);
+                        if (elemento) {
+                          elemento.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
+                      className={`w-12 h-12 ${
+                        tieneReservasHoy 
+                          ? 'bg-gradient-to-br from-red-500 to-red-700' 
+                          : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                      } text-white rounded-xl font-black text-xl hover:shadow-xl hover:scale-110 transition-all shadow-md relative`}
+                      title={tieneReservasHoy ? `Cabaña ${num} - Ocupada` : `Cabaña ${num} - Libre`}
+                    >
+                      {num}
+                      {tieneReservasHoy && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"></span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-7xl mx-auto p-4">
+        {/* ALERTAS DE PRÓXIMAS DESOCUPACIONES */}
+        {proximasDesocupaciones.length > 0 && view !== 'dashboard' && (
+          <div className="mb-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-3 animate-pulse">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle size={18} />
+              <div>
+                <h3 className="font-bold text-sm">🔔 Próximas Desocupaciones</h3>
+                <p className="text-xs opacity-90">Se liberan en los próximos 7 días</p>
+              </div>
+            </div>
+            {proximasDesocupaciones.slice(0, 3).map(r => {
+              const dias = Math.ceil((new Date(r.fechaSalida) - new Date()) / (1000 * 60 * 60 * 24));
+              return (
+                <div key={r.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-2 flex justify-between items-center mb-1">
+                  <div>
+                    <p className="font-bold text-sm">Cabaña {r.cabaña} - {r.clienteNombre}</p>
+                    <p className="text-xs">Desocupa: {formatearFecha(r.fechaSalida)}{r.fechaSalidaReal && ` (salida real: ${formatearFecha(r.fechaSalidaReal)})`}</p>
+                  </div>
+                  <div className="bg-white/20 px-3 py-1 rounded-lg text-center">
+                    <p className="text-lg font-black">{dias}</p>
+                    <p className="text-xs">{dias === 1 ? 'día' : 'días'}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* VISTA DASHBOARD PREMIUM */}
+        {view === 'dashboard' && (
+          <div className="space-y-4">
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl shadow-xl p-6 border-2 ${darkMode ? 'border-gray-700' : 'border-blue-100'}`}>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-blue-800'}`}>Dashboard</h2>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Resumen de tu negocio • {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</p>
+                </div>
+                <TrendingUp className={darkMode ? 'text-green-400' : 'text-green-500'} size={40} />
+              </div>
+
+              {/* MÉTRICAS PRINCIPALES */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Calendar size={24} />
+                    <span className="text-3xl font-black">{stats.total}</span>
+                  </div>
+                  <p className="text-sm opacity-90">Reservas</p>
+                  <p className="text-xs opacity-75">Este mes</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 rounded-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <CheckCircle size={24} />
+                    <span className="text-3xl font-black">{stats.pagadas}</span>
+                  </div>
+                  <p className="text-sm opacity-90">Pagadas</p>
+                  <p className="text-xs opacity-75">{stats.total > 0 ? Math.round((stats.pagadas / stats.total) * 100) : 0}% del total</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-yellow-500 to-orange-600 text-white p-4 rounded-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock size={24} />
+                    <span className="text-3xl font-black">{stats.pendientes}</span>
+                  </div>
+                  <p className="text-sm opacity-90">Pendientes</p>
+                  <p className="text-xs opacity-75">Por cobrar</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-4 rounded-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <DollarSign size={24} />
+                    <span className="text-2xl font-black">{stats.total > 0 ? Math.round((stats.total / 9 / 30) * 100) : 0}%</span>
+                  </div>
+                  <p className="text-sm opacity-90">Ocupación</p>
+                  <p className="text-xs opacity-75">Promedio</p>
+                </div>
+              </div>
+
+              {/* INGRESOS Y GASTOS */}
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-green-50'} p-4 rounded-xl border-2 ${darkMode ? 'border-gray-600' : 'border-green-200'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className={`text-sm font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>💰 Ingresos del Mes</p>
+                      <p className={`text-2xl font-black ${darkMode ? 'text-green-300' : 'text-green-800'}`}>{formatearMoneda(stats.montoPagado)}</p>
+                    </div>
+                    <TrendingUp className={darkMode ? 'text-green-400' : 'text-green-600'} size={32} />
+                  </div>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-green-600'}`}>Cobrado hasta ahora</p>
+                </div>
+
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-red-50'} p-4 rounded-xl border-2 ${darkMode ? 'border-gray-600' : 'border-red-200'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className={`text-sm font-bold ${darkMode ? 'text-red-400' : 'text-red-700'}`}>📉 Gastos del Mes</p>
+                      <p className={`text-2xl font-black ${darkMode ? 'text-red-300' : 'text-red-800'}`}>{formatearMoneda(calcularTotalGastos())}</p>
+                    </div>
+                    <AlertTriangle className={darkMode ? 'text-red-400' : 'text-red-600'} size={32} />
+                  </div>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-red-600'}`}>Total gastado</p>
+                </div>
+              </div>
+
+              {/* GANANCIA NETA */}
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-xl shadow-lg text-center">
+                <p className="text-sm opacity-90 mb-1">💎 GANANCIA NETA DEL MES</p>
+                <p className="text-5xl font-black mb-2">{formatearMoneda(calcularGananciaReal())}</p>
+                <p className="text-xs opacity-75">Ingresos - Gastos</p>
+              </div>
+
+              {/* OCUPACIÓN POR CABAÑA */}
+              <div className="mt-6">
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-blue-800'} mb-4 flex items-center gap-2`}>
+                  <PieChart size={24} />
+                  Ocupación por Cabaña
+                </h3>
+                <div className="grid grid-cols-3 md:grid-cols-9 gap-2">
+                  {calcularOcupacionPorCabana().map(({ cabaña, noches, reservas: numReservas }) => (
+                    <div 
+                      key={cabaña} 
+                      className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} border-2 rounded-lg p-3 text-center hover:shadow-lg transition-all cursor-pointer`}
+                      onClick={() => {
+                        setView('calendario');
+                        setTimeout(() => {
+                          const elemento = document.getElementById(`cabana-${cabaña}`);
+                          if (elemento) elemento.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                      }}
+                    >
+                      <p className={`text-2xl font-black ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>{cabaña}</p>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{noches} noches</p>
+                      <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>{numReservas} reservas</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* INGRESOS POR CABAÑA */}
+              <div className="mt-6">
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-blue-800'} mb-4 flex items-center gap-2`}>
+                  <DollarSign size={24} />
+                  Ingresos por Cabaña (Pagados)
+                </h3>
+                <div className="space-y-2">
+                  {calcularIngresoPorCabana()
+                    .sort((a, b) => b.ingreso - a.ingreso)
+                    .map(({ cabaña, ingreso }, index) => {
+                      const maxIngreso = Math.max(...calcularIngresoPorCabana().map(c => c.ingreso));
+                      const porcentaje = maxIngreso > 0 ? (ingreso / maxIngreso) * 100 : 0;
+                      return (
+                        <div key={cabaña} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-3`}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Cabaña {cabaña}</span>
+                            <span className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>{formatearMoneda(ingreso)}</span>
+                          </div>
+                          <div className={`w-full ${darkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full h-2`}>
+                            <div 
+                              className={`${
+                                index === 0 ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
+                                index === 1 ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                                'bg-gradient-to-r from-gray-400 to-gray-500'
+                              } h-2 rounded-full transition-all duration-500`}
+                              style={{ width: `${porcentaje}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* PRÓXIMAS DESOCUPACIONES DESTACADAS */}
+              {proximasDesocupaciones.length > 0 && (
+                <div className="mt-6">
+                  <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-blue-800'} mb-4 flex items-center gap-2`}>
+                    <AlertCircle size={24} />
+                    Próximas Desocupaciones
+                  </h3>
+                  <div className="space-y-2">
+                    {proximasDesocupaciones.map(r => {
+                      const dias = Math.ceil((new Date(r.fechaSalida) - new Date()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <div 
+                          key={r.id} 
+                          className={`${darkMode ? 'bg-gray-700' : 'bg-orange-50'} border-2 ${darkMode ? 'border-orange-500' : 'border-orange-300'} rounded-lg p-3 flex justify-between items-center`}
+                        >
+                          <div>
+                            <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                              Cabaña {r.cabaña} - {r.clienteNombre}
+                            </p>
+                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Desocupa: {formatearFecha(r.fechaSalida)}{r.fechaSalidaReal && ` (salida real: ${formatearFecha(r.fechaSalidaReal)})`}
+                            </p>
+                          </div>
+                          <div className={`${darkMode ? 'bg-orange-600' : 'bg-orange-500'} text-white px-4 py-2 rounded-lg text-center`}>
+                            <p className="text-2xl font-black">{dias}</p>
+                            <p className="text-xs">{dias === 1 ? 'día' : 'días'}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* NUEVA SECCIÓN: OCUPACIÓN POR CABAÑAS */}
+              <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} rounded-2xl p-6 border-2 mt-6`}>
+                <h3 className={`text-2xl font-black mb-6 ${darkMode ? 'text-white' : 'text-blue-800'}`}>📊 Ocupación por Cabaña</h3>
+                
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((numCabana) => {
+                    const reservasCabana = reservas.filter(r => r.cabaña === numCabana);
+                    const diasOcupados = reservasCabana.reduce((sum, r) => {
+                      const entrada = new Date(r.fechaEntrada);
+                      const salida = new Date(r.fechaSalida);
+                      const dias = Math.ceil((salida - entrada) / (1000 * 60 * 60 * 24)) + 1;
+                      return sum + dias;
+                    }, 0);
+                    
+                    const diasTotales = 30;
+                    const porcentajeOcupacion = Math.round((diasOcupados / diasTotales) * 100);
+                    
+                    let colorBarra = 'from-red-400 to-red-500';
+                    let colorTexto = 'text-red-700';
+                    if (porcentajeOcupacion >= 33 && porcentajeOcupacion < 66) {
+                      colorBarra = 'from-yellow-400 to-yellow-500';
+                      colorTexto = 'text-yellow-700';
+                    } else if (porcentajeOcupacion >= 66) {
+                      colorBarra = 'from-green-400 to-green-500';
+                      colorTexto = 'text-green-700';
+                    }
+                    
+                    return (
+                      <div key={numCabana} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Cabaña {numCabana}</p>
+                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{diasOcupados} días ocupados</p>
+                          </div>
+                          <div className={`text-2xl font-black ${colorTexto}`}>{porcentajeOcupacion}%</div>
+                        </div>
+                        <div className={`w-full h-10 rounded-lg overflow-hidden bg-gray-200 ${darkMode ? 'bg-gray-600' : ''}`}>
+                          <div className={`h-full bg-gradient-to-r ${colorBarra} flex items-center justify-center transition-all duration-500`} style={{ width: `${Math.min(porcentajeOcupacion, 100)}%` }}>
+                            {porcentajeOcupacion > 15 && <span className="text-white font-bold text-sm">{porcentajeOcupacion}%</span>}
+                          </div>
+                        </div>
+                        {reservasCabana.length > 0 && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{reservasCabana.length} {reservasCabana.length === 1 ? 'reserva' : 'reservas'} • ${(reservasCabana.reduce((sum, r) => sum + calcularTotal(r), 0)).toLocaleString('es-AR')} ingresos</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={`${darkMode ? 'bg-gray-600 border-gray-500' : 'bg-white border-blue-100'} border-2 rounded-lg p-4 mt-6`}>
+                  <h4 className={`font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>📈 Ranking de Cabañas</h4>
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((numCabana) => { const reservasCabana = reservas.filter(r => r.cabaña === numCabana); const ingresos = reservasCabana.reduce((sum, r) => sum + calcularTotal(r), 0); return { cabaña: numCabana, ingresos, reservas: reservasCabana.length }; }).sort((a, b) => b.ingresos - a.ingresos).map((item, index) => (<div key={item.cabaña} className="flex justify-between items-center"><span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>🏆 #{index + 1}: Cabaña {item.cabaña}</span><span className={`${darkMode ? 'text-green-400' : 'text-green-600'} font-bold`}>${item.ingresos.toLocaleString('es-AR')}</span></div>))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RESTO DE LAS VISTAS (Calendario, Reservas, Reportes, Gastos) */}
+        {/* Mantengo el código original de estas secciones por brevedad */}
+        
+        {view === 'calendario' && (
+          <div className="space-y-4">
+            {cabañasArray.map(cabana => {
+              const mesCabana = mesesPorCabana[cabana];
+              return (
+                <div key={cabana} id={`cabana-${cabana}`} className={`border-2 ${darkMode ? 'border-blue-500 bg-gray-700' : 'border-blue-200 bg-gradient-to-br from-white to-blue-50'} rounded-2xl p-4 shadow-md scroll-mt-40`}>
+                  <div className="flex justify-between items-center mb-4">
+                    <button 
+                      onClick={() => setMesesPorCabana({
+                        ...mesesPorCabana,
+                        [cabana]: new Date(mesCabana.getFullYear(), mesCabana.getMonth() - 1)
+                      })} 
+                      className={`p-2 rounded-full ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-blue-100'} transition-all`}
+                      title="Mes anterior"
+                    >
+                      <ChevronLeft size={24} className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
+                    </button>
+                    <div className="text-center">
+                      <h3 className={`font-black text-3xl ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+                        CABAÑA {cabana}
+                      </h3>
+                      <p className={`text-sm font-bold capitalize ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                        {mesCabana.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setMesesPorCabana({
+                        ...mesesPorCabana,
+                        [cabana]: new Date(mesCabana.getFullYear(), mesCabana.getMonth() + 1)
+                      })} 
+                      className={`p-2 rounded-full ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-blue-100'} transition-all`}
+                      title="Mes siguiente"
+                    >
+                      <ChevronRight size={24} className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {diasSemana.map(d => <div key={d} className={`text-center text-xs font-bold py-1 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>{d}</div>)}
+                    {Array.from({ length: getFirstDayOfMonth(mesCabana) }).map((_, i) => <div key={`e${i}`}></div>)}
+                    {Array.from({ length: getDaysInMonth(mesCabana) }).map((_, i) => {
+                      const dia = i + 1;
+                      const y = mesCabana.getFullYear();
+                      const m = String(mesCabana.getMonth() + 1).padStart(2, '0');
+                      const d = String(dia).padStart(2, '0');
+                      const dateStr = `${y}-${m}-${d}`;
+                      const reserva = reservas.find(r => r.cabaña === cabana && isDateInRange(dateStr, r.fechaEntrada, r.fechaSalida));
+                      const colorReserva = reserva ? generarColorAleatorio(reserva.id) : '';
+                      return (
+                        <div
+                          key={dia}
+                          onClick={() => {
+                            if (reserva) {
+                              handleEditReserva(reserva);
+                            } else {
+                              setFormData({ ...initialFormData, cabaña: cabana, fechaEntrada: dateStr });
+                              setShowForm(true);
+                            }
+                          }}
+                          className={`h-16 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all p-1 ${
+                            reserva 
+                              ? `bg-gradient-to-br ${colorReserva} text-white shadow-md hover:shadow-xl hover:scale-105` 
+                              : darkMode 
+                                ? 'bg-gray-600 hover:bg-gray-500 text-gray-300'
+                                : 'bg-gray-100 hover:bg-blue-100 text-gray-700'
+                          }`}
+                        >
+                          <span className="text-xl font-black leading-none">{dia}</span>
+                          {reserva && (
+                            <span className="text-[10px] font-bold leading-tight text-center mt-1 px-0.5 line-clamp-2">
+                              {reserva.clienteNombre}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            <button 
+              onClick={() => { setShowForm(true); setEditingId(null); setFormData(initialFormData); }} 
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-[1.02]"
+            >
+              <Plus size={24} /> Nueva Reserva
+            </button>
+          </div>
+        )}
+
+        {view === 'reservas' && (
+          <div className="space-y-4">
+            <div className={`sticky top-52 z-10 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-xl p-2 mb-4`}>
+              <button 
+                onClick={() => { setShowForm(true); setEditingId(null); setFormData(initialFormData); }} 
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all"
+              >
+                <Plus size={24} /> Nueva Reserva
+              </button>
+            </div>
+
+            {reservasFiltradas.length === 0 ? (
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-12 text-center shadow-lg`}>
+                <Users size={64} className={`mx-auto ${darkMode ? 'text-gray-600' : 'text-gray-300'} mb-4`} />
+                <p className={`text-xl ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {searchTerm || filters.cabaña !== 'todas' || filters.estado !== 'todos' 
+                    ? 'No se encontraron reservas con los filtros aplicados'
+                    : 'No hay reservas registradas'}
+                </p>
+              </div>
+            ) : (
+              cabañasArray.map(numCabana => {
+                const reservasCabana = reservasFiltradas
+                  .filter(r => r.cabaña === numCabana)
+                  .sort((a, b) => new Date(a.fechaEntrada) - new Date(b.fechaEntrada));
+                
+                if (reservasCabana.length === 0) return null;
+                
+                return (
+                  <div key={numCabana} id={`cabana-${numCabana}`} className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl shadow-xl overflow-hidden scroll-mt-40 border-2 ${darkMode ? 'border-gray-700' : ''}`}>
+                    <div className={`${darkMode ? 'bg-gradient-to-r from-blue-600 to-blue-700' : 'bg-gradient-to-r from-blue-500 to-blue-600'} text-white py-4 px-6`}>
+                      <h3 className="text-2xl font-black text-center">CABAÑA {numCabana}</h3>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} border-b-2`}>
+                          <tr>
+                            <th className={`px-4 py-3 text-left text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Cliente</th>
+                            <th className={`px-4 py-3 text-left text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Contacto</th>
+                            <th className={`px-4 py-3 text-left text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Desde - Hasta</th>
+                            <th className={`px-4 py-3 text-center text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Días</th>
+                            <th className={`px-4 py-3 text-right text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Total</th>
+                            <th className={`px-4 py-3 text-right text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Entregado</th>
+                            <th className={`px-4 py-3 text-right text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Resta</th>
+                            <th className={`px-4 py-3 text-center text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Estado</th>
+                            <th className={`px-4 py-3 text-center text-xs font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reservasCabana.map((r, idx) => {
+                            const dias = calcularDias(r.fechaEntrada, r.fechaSalida);
+                            const total = calcularTotal(r);
+                            const entregado = r.montoPagado || 0;
+                            const resta = total - entregado;
+                            
+                            return (
+                              <tr key={r.id} className={`border-b ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} transition-colors ${idx % 2 === 0 ? (darkMode ? 'bg-gray-800' : 'bg-white') : (darkMode ? 'bg-gray-750' : 'bg-gray-50')}`}>
+                                <td className={`px-4 py-3 text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  <div className="flex items-center gap-2">
+                                    {r.clienteNombre}
+                                    {r.tags && r.tags.length > 0 && (
+                                      <div className="flex gap-1">
+                                        {r.tags.slice(0, 2).map(tag => (
+                                          <span key={tag} className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">{tag}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className={`px-4 py-3 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{r.clienteContacto || '-'}</td>
+                                <td className={`px-4 py-3 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  <div>{formatearFecha(r.fechaEntrada)}</div>
+                                  <div>{formatearFecha(r.fechaSalida)}</div>
+                                  {r.fechaSalidaReal && <div className="text-orange-600 font-bold">Salida real: {formatearFecha(r.fechaSalidaReal)}</div>}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">{dias}</span>
+                                </td>
+                                <td className={`px-4 py-3 text-right text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{formatearMoneda(total)}</td>
+                                <td className="px-4 py-3 text-right text-sm text-green-700 font-semibold">{formatearMoneda(entregado)}</td>
+                                <td className="px-4 py-3 text-right text-sm text-orange-700 font-semibold">{formatearMoneda(resta)}</td>
+                                <td className="px-4 py-3 text-center">
+                                  {r.pagado ? (
+                                    <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">✓ Pagado</span>
+                                  ) : r.pagoACuenta && r.montoPagado > 0 ? (
+                                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">◐ A cuenta</span>
+                                  ) : (
+                                    <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">⚠ Pendiente</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <div className="flex gap-1 justify-center">
+                                    {r.notas && (
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setCurrentReservaForNotes(r);
+                                          setShowNotesModal(true);
+                                        }} 
+                                        className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
+                                        title="Ver notas"
+                                      >
+                                        <FileText size={14} />
+                                      </button>
+                                    )}
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditReserva(r);
+                                      }} 
+                                      className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+                                      title="Editar reserva"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleDeleteReserva(r.id)}
+                                      className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition-all font-bold"
+                                      title="Eliminar"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} px-6 py-3 border-t-2`}>
+                      <div className="flex justify-between text-sm">
+                        <span className={`font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Resumen Cabaña {numCabana}:</span>
+                        <span className={`font-bold ${darkMode ? 'text-white' : 'text-blue-900'}`}>{reservasCabana.length} reserva{reservasCabana.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {view === 'reportes' && (
+          <div className="space-y-4">
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 shadow-lg border-2 ${darkMode ? 'border-gray-700' : ''}`}>
+              <div className="mb-6">
+                <h3 className={`text-lg font-bold mb-3 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>📅 Filtrar por Rango de Fechas</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Desde (Mes/Año)</label>
+                    <input 
+                      type="month" 
+                      value={rangoFechas.desde} 
+                      onChange={(e) => setRangoFechas({ ...rangoFechas, desde: e.target.value })} 
+                      className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                    />
+                  </div>
+                  <div>
+                    <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Hasta (Mes/Año)</label>
+                    <input 
+                      type="month" 
+                      value={rangoFechas.hasta} 
+                      onChange={(e) => setRangoFechas({ ...rangoFechas, hasta: e.target.value })} 
+                      className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                    />
+                  </div>
+                </div>
+                {rangoFechas.desde && rangoFechas.hasta && (
+                  <button 
+                    onClick={() => setRangoFechas({ desde: '', hasta: '' })} 
+                    className="w-full bg-gray-500 text-white py-2 rounded-xl font-bold text-sm hover:bg-gray-600 transition-all"
+                  >
+                    Limpiar Filtro
+                  </button>
+                )}
+              </div>
+
+              <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+                {rangoFechas.desde && rangoFechas.hasta 
+                  ? (() => {
+                      const [anoD, mesD] = rangoFechas.desde.split('-');
+                      const [anoH, mesH] = rangoFechas.hasta.split('-');
+                      const desde = new Date(parseInt(anoD), parseInt(mesD) - 1, 1);
+                      const hasta = new Date(parseInt(anoH), parseInt(mesH) - 1, 1);
+                      return `Reporte: ${desde.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })} - ${hasta.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
+                    })()
+                  : currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+              </h3>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Reservas Totales</p>
+                  <p className="text-3xl font-bold">{stats.total}</p>
+                </div>
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Pagadas</p>
+                  <p className="text-3xl font-bold">{stats.pagadas}</p>
+                </div>
+                <div className="bg-gradient-to-br from-yellow-500 to-orange-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Pendientes</p>
+                  <p className="text-3xl font-bold">{stats.pendientes}</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Ocupación</p>
+                  <p className="text-3xl font-bold">{stats.total > 0 ? Math.round((stats.total / 30) * 100) : 0}%</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className={`${darkMode ? 'bg-green-900 border-green-700' : 'bg-green-50 border-green-200'} p-4 rounded-xl border-2`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>Cobrado</span>
+                    <span className={`text-2xl font-bold ${darkMode ? 'text-green-300' : 'text-green-800'}`}>{formatearMoneda(stats.montoPagado)}</span>
+                  </div>
+                </div>
+                <div className={`${darkMode ? 'bg-yellow-900 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} p-4 rounded-xl border-2`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>Por Cobrar</span>
+                    <span className={`text-2xl font-bold ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>{formatearMoneda(stats.montoPendiente)}</span>
+                  </div>
+                </div>
+                <div className={`${darkMode ? 'bg-blue-900 border-blue-700' : 'bg-blue-50 border-blue-200'} p-4 rounded-xl border-2`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`font-bold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>Total Esperado</span>
+                    <span className={`text-2xl font-bold ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>{formatearMoneda(stats.montoTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button 
+                onClick={generateReportPDF} 
+                className="bg-gradient-to-r from-red-500 to-red-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+              >
+                <FileText size={24} /> Descargar PDF Profesional
+              </button>
+              <button 
+                onClick={generateReportExcel} 
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all"
+              >
+                <Download size={24} /> Descargar Excel/CSV
+              </button>
+            </div>
+          </div>
+        )}
+
+        {view === 'gastos' && (
+          <div className="space-y-4">
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 shadow-lg border-2 ${darkMode ? 'border-gray-700' : ''}`}>
+              <div className="mb-6">
+                <h3 className={`text-lg font-bold mb-3 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>📅 Filtrar por Rango de Fechas</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Desde (Mes/Año)</label>
+                    <input 
+                      type="month" 
+                      value={rangoFechas.desde} 
+                      onChange={(e) => setRangoFechas({ ...rangoFechas, desde: e.target.value })} 
+                      className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                    />
+                  </div>
+                  <div>
+                    <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Hasta (Mes/Año)</label>
+                    <input 
+                      type="month" 
+                      value={rangoFechas.hasta} 
+                      onChange={(e) => setRangoFechas({ ...rangoFechas, hasta: e.target.value })} 
+                      className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                    />
+                  </div>
+                </div>
+                {rangoFechas.desde && rangoFechas.hasta && (
+                  <button 
+                    onClick={() => setRangoFechas({ desde: '', hasta: '' })} 
+                    className="w-full bg-gray-500 text-white py-2 rounded-xl font-bold text-sm hover:bg-gray-600 transition-all"
+                  >
+                    Limpiar Filtro
+                  </button>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center mb-6">
+                {!rangoFechas.desde && !rangoFechas.hasta && (
+                  <>
+                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} className={`p-3 rounded-full ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} transition-all`}>
+                      <ChevronLeft size={24} className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
+                    </button>
+                    <h2 className={`text-2xl font-bold capitalize ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+                      {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                    </h2>
+                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))} className={`p-3 rounded-full ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-blue-50'} transition-all`}>
+                      <ChevronRight size={24} className={darkMode ? 'text-blue-400' : 'text-blue-600'} />
+                    </button>
+                  </>
+                )}
+                {rangoFechas.desde && rangoFechas.hasta && (
+                  <h2 className={`text-2xl font-bold capitalize mx-auto ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+                    {(() => {
+                      const [anoD, mesD] = rangoFechas.desde.split('-');
+                      const [anoH, mesH] = rangoFechas.hasta.split('-');
+                      const desde = new Date(parseInt(anoD), parseInt(mesD) - 1, 1);
+                      const hasta = new Date(parseInt(anoH), parseInt(mesH) - 1, 1);
+                      return `${desde.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })} - ${hasta.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}`;
+                    })()}
+                  </h2>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Ingresos {rangoFechas.desde && rangoFechas.hasta ? 'del Rango' : 'del Mes'}</p>
+                  <p className="text-2xl font-bold">{formatearMoneda(stats.montoPagado)}</p>
+                </div>
+                <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white p-4 rounded-xl shadow-lg">
+                  <p className="text-sm opacity-90">Gastos {rangoFechas.desde && rangoFechas.hasta ? 'del Rango' : 'del Mes'}</p>
+                  <p className="text-2xl font-bold">{formatearMoneda(rangoFechas.desde && rangoFechas.hasta ? calcularGastosRango() : calcularTotalGastos())}</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-xl mb-6 text-center shadow-lg">
+                <p className="text-sm opacity-90">💰 Ganancia Real</p>
+                <p className="text-4xl font-black">{formatearMoneda(calcularGananciaReal())}</p>
+                <p className="text-xs opacity-75 mt-2">Ingresos - Gastos</p>
+              </div>
+
+              <button 
+                onClick={() => {
+                  const gastoActual = getGastosMes();
+                  const categoriasVacias = {};
+                  categoriasGastos.forEach(cat => {
+                    categoriasVacias[cat] = gastoActual?.categorias?.[cat] || 0;
+                  });
+                  setGastoMesActual(categoriasVacias);
+                  setShowFormGasto(true);
+                }}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all"
+              >
+                <Plus size={24} /> Cargar/Editar Gastos del Mes
+              </button>
+
+              {getGastosMes() && (
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-4 mt-4`}>
+                  <h3 className={`font-bold text-lg mb-4 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>Detalle de Gastos</h3>
+                  <div className="space-y-2">
+                    {categoriasGastos.map(cat => {
+                      const valor = getGastosMes()?.categorias?.[cat] || 0;
+                      if (valor === 0) return null;
+                      return (
+                        <div key={cat} className={`flex justify-between items-center ${darkMode ? 'bg-gray-600' : 'bg-white'} p-3 rounded-lg shadow-sm`}>
+                          <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{cat}</span>
+                          <span className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{formatearMoneda(valor)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
+        {view === 'pendientes' && (
+          <div className="space-y-4">
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl shadow-xl p-6 border-2 ${darkMode ? 'border-gray-700' : 'border-blue-100'}`}>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-blue-800'}`}>💰 Pagos Pendientes</h2>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Clientes que aún deben</p>
+                </div>
+                <AlertTriangle className={darkMode ? 'text-red-400' : 'text-red-500'} size={40} />
+              </div>
+
+              {(() => {
+                const pendientes = reservas.filter(r => !r.pagado && !r.pagoACuenta).map(r => ({
+                  ...r,
+                  total: calcularTotal(r),
+                  diasDesde: Math.floor((new Date() - new Date(r.fechaSalida)) / (1000 * 60 * 60 * 24))
+                }));
+
+                if (pendientes.length === 0) {
+                  return (
+                    <div className={`text-center py-8 ${darkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-xl`}>
+                      <CheckCircle className={darkMode ? 'text-green-400' : 'text-green-500'} size={40} className="mx-auto mb-2" />
+                      <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>¡Excelente! No hay pagos pendientes</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    <div className={`${darkMode ? 'bg-red-900 border-red-700' : 'bg-red-50 border-red-200'} border-2 rounded-lg p-4 mb-4`}>
+                      <p className={`font-bold ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+                        ⚠️ Total Adeudado: ${pendientes.reduce((sum, p) => sum + p.total, 0).toLocaleString('es-AR')}
+                      </p>
+                    </div>
+
+                    {pendientes.sort((a, b) => b.diasDesde - a.diasDesde).map((p) => (
+                      <div key={p.id} className={`${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-orange-200'} border-2 rounded-xl p-4`}>
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <p className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                              {p.clienteNombre}
+                            </p>
+                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Cabaña {p.cabaña}
+                            </p>
+                          </div>
+                          <div className={`text-2xl font-black ${p.diasDesde > 30 ? (darkMode ? 'text-red-300' : 'text-red-600') : (darkMode ? 'text-orange-300' : 'text-orange-600')}`}>
+                            ${p.total.toLocaleString('es-AR')}
+                          </div>
+                        </div>
+
+                        <div className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} rounded-lg p-3 mb-3 text-sm`}>
+                          <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
+                            📅 Fecha Salida: {formatearFecha(p.fechaSalida)}
+                          </p>
+                          <p className={`${darkMode ? 'text-red-300' : 'text-red-700'} font-bold mt-1`}>
+                            ⏰ Hace {p.diasDesde} días pendiente
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const mensaje = `Hola ${p.clienteNombre}, te recordamos que la reserva en Cabaña ${p.cabaña} tiene un saldo pendiente de $${p.total.toLocaleString('es-AR')}. Por favor, realiza el pago a la brevedad. ¡Gracias!`;
+                              navigator.clipboard.writeText(mensaje);
+                              showAlert('success', '✅ Mensaje copiado. Pega en WhatsApp');
+                            }}
+                            className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-2 rounded-lg font-bold hover:shadow-lg transition-all text-sm"
+                          >
+                            📱 Copiar para WhatsApp
+                          </button>
+                          <button
+                            onClick={() => {
+                              const reservaActualizada = { ...p, pagado: true };
+                              setReservas(reservas.map(r => r.id === p.id ? reservaActualizada : r));
+                              showAlert('success', '✅ Marcado como pagado');
+                            }}
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-lg font-bold hover:shadow-lg transition-all text-sm"
+                          >
+                            ✅ Pagado
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* FOOTER PREMIUM */}
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 mt-8 text-center text-white shadow-lg">
+          <p className="font-bold text-sm mb-1 flex items-center justify-center gap-2">
+            <CheckCircle size={16} />
+            Sistema Las Rocas Premium V29
+          </p>
+          <p className="text-xs opacity-90">Gestión Integral de Cabañas • San Rafael, Mendoza</p>
+          <p className="text-xs opacity-75 mt-2">Todos los cambios se guardan automáticamente • Con ❤️ por Roberto</p>
+        </div>
+      </div>
+
+      {/* MODALES Y FORMULARIOS - Continuarán en el siguiente mensaje por límite de espacio */}
+      {/* Mantengo los modales originales pero con mejoras de darkMode */}
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 overflow-y-auto p-4">
+          <div className="flex justify-center min-h-screen py-8">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-2xl shadow-2xl`}>
+              <h2 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-blue-800'}`}>{editingId ? '✏️ Editar Reserva' : '➕ Nueva Reserva'}</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Cabaña *</label>
+                  <select 
+                    value={formData.cabaña} 
+                  onChange={(e) => setFormData({ ...formData, cabaña: parseInt(e.target.value) })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
+                >
+                  {cabañasArray.map(num => (
+                    <option key={num} value={num}>Cabaña {num}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Fecha Entrada *</label>
+                  <input 
+                    type="date" 
+                    value={formData.fechaEntrada} 
+                    onChange={(e) => setFormData({ ...formData, fechaEntrada: e.target.value })} 
+                    className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  />
+                </div>
+                <div>
+                  <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Fecha Salida *</label>
+                  <input 
+                    type="date" 
+                    value={formData.fechaSalida} 
+                    onChange={(e) => setFormData({ ...formData, fechaSalida: e.target.value })} 
+                    className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Fecha Salida Real (informativo - mañana checkout)</label>
+                <input 
+                  type="date" 
+                  value={formData.fechaSalidaReal} 
+                  onChange={(e) => setFormData({ ...formData, fechaSalidaReal: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                />
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Nombre del Cliente *</label>
+                <input 
+                  type="text" 
+                  value={formData.clienteNombre} 
+                  onChange={(e) => setFormData({ ...formData, clienteNombre: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  placeholder="Juan Pérez"
+                />
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Contacto (Teléfono/Email)</label>
+                <input 
+                  type="text" 
+                  value={formData.clienteContacto} 
+                  onChange={(e) => setFormData({ ...formData, clienteContacto: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  placeholder="+54 9 2604 123456"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Cantidad de Personas</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={formData.cantidadPersonas} 
+                    onChange={(e) => setFormData({ ...formData, cantidadPersonas: parseInt(e.target.value) })} 
+                    className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  />
+                </div>
+                <div>
+                  <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Precio por Día</label>
+                  <input 
+                    type="text" 
+                    value={formData.precioPorDia.toLocaleString('es-AR')} 
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/\./g, '');
+                      setFormData({ ...formData, precioPorDia: parseInt(valor) || 0 });
+                    }} 
+                    className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                  />
+                </div>
+              </div>
+
+              {/* NUEVA SECCIÓN: Tags y Notas */}
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Tags del Cliente</label>
+                <div className="flex flex-wrap gap-2">
+                  {tagsDisponibles.map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        const tags = formData.tags || [];
+                        if (tags.includes(tag)) {
+                          setFormData({ ...formData, tags: tags.filter(t => t !== tag) });
+                        } else {
+                          setFormData({ ...formData, tags: [...tags, tag] });
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-full text-sm font-bold transition-all ${
+                        (formData.tags || []).includes(tag)
+                          ? 'bg-blue-500 text-white'
+                          : darkMode
+                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Notas Internas (opcional)</label>
+                <textarea
+                  value={formData.notas || ''}
+                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                  rows={3}
+                  placeholder="Ej: Cliente prefiere cabaña 3, alérgico a mascotas..."
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
+                />
+              </div>
+
+              {formData.fechaEntrada && formData.fechaSalida && (
+                <div className={`${darkMode ? 'bg-blue-900 border-blue-700' : 'bg-blue-50 border-blue-300'} p-4 rounded-xl border-2`}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`text-sm font-bold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>Días de estadía:</span>
+                    <span className={`text-2xl font-black ${darkMode ? 'text-blue-300' : 'text-blue-900'}`}>{calcularDias(formData.fechaEntrada, formData.fechaSalida)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className={`text-sm font-bold ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>Importe Total:</span>
+                    <span className={`text-2xl font-black ${darkMode ? 'text-blue-300' : 'text-blue-900'}`}>{formatearMoneda(calcularImporteTotal())}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
+                <label className="flex items-center gap-3 mb-3">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.pagoACuenta} 
+                    onChange={(e) => setFormData({ ...formData, pagoACuenta: e.target.checked, montoPagado: e.target.checked ? formData.montoPagado : 0 })} 
+                    className="w-5 h-5"
+                  />
+                  <span className={`font-bold ${darkMode ? 'text-white' : ''}`}>¿Pagó a cuenta?</span>
+                </label>
+
+                {formData.pagoACuenta && (
+                  <div className="space-y-3 pl-8 border-l-4 border-blue-300 ml-2">
+                    <div>
+                      <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Monto Entregado</label>
+                      <input 
+                        type="text" 
+                        value={formData.montoPagado.toLocaleString('es-AR')} 
+                        onChange={(e) => {
+                          const valor = e.target.value.replace(/\./g, '');
+                          setFormData({ ...formData, montoPagado: parseInt(valor) || 0 });
+                        }} 
+                        className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Método de Pago a Cuenta</label>
+                      <select 
+                        value={formData.metodoPagoACuenta} 
+                        onChange={(e) => setFormData({ ...formData, metodoPagoACuenta: e.target.value })} 
+                        className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Débito">Débito</option>
+                        <option value="Crédito">Crédito</option>
+                        <option value="MercadoPago">MercadoPago</option>
+                      </select>
+                    </div>
+                    
+                    {formData.fechaEntrada && formData.fechaSalida && formData.montoPagado > 0 && (
+                      <div className={`${darkMode ? 'bg-orange-900 border-orange-700' : 'bg-orange-50 border-orange-300'} p-3 rounded-lg border-2`}>
+                        <div className="flex justify-between items-center">
+                          <span className={`text-sm font-bold ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>Saldo Restante:</span>
+                          <span className={`text-xl font-black ${darkMode ? 'text-orange-300' : 'text-orange-900'}`}>
+                            {formatearMoneda(calcularImporteTotal() - formData.montoPagado)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <label className="flex items-center gap-3 mt-4">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.pagado} 
+                    onChange={(e) => setFormData({ ...formData, pagado: e.target.checked })} 
+                    className="w-5 h-5"
+                  />
+                  <span className={`font-bold ${darkMode ? 'text-white' : ''}`}>✅ Pago Completo</span>
+                </label>
+
+                {formData.pagado && (
+                  <div className="mt-3 pl-8 border-l-4 border-green-300 ml-2">
+                    <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Método de Pago Final</label>
+                    <select 
+                      value={formData.metodoPago} 
+                      onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })} 
+                      className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Transferencia">Transferencia</option>
+                      <option value="Débito">Débito</option>
+                      <option value="Crédito">Crédito</option>
+                      <option value="MercadoPago">MercadoPago</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-gray-300 mt-4">
+              <button 
+                onClick={handleAddReserva} 
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all"
+              >
+                {editingId ? 'Actualizar' : 'Guardar'} Reserva
+              </button>
+              <button 
+                onClick={() => { setShowForm(false); setEditingId(null); setFormData(initialFormData); }} 
+                className="flex-1 bg-gray-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-600 transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE NOTAS */}
+      {showNotesModal && currentReservaForNotes && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-lg shadow-2xl`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+                📝 Notas de Reserva
+              </h3>
+              <button 
+                onClick={() => setShowNotesModal(false)}
+                className={`p-2 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded-lg transition-all`}
+              >
+                <X size={24} className={darkMode ? 'text-gray-400' : 'text-gray-600'} />
+              </button>
+            </div>
+            
+            <div className={`${darkMode ? 'bg-gray-700' : 'bg-blue-50'} p-4 rounded-xl mb-4`}>
+              <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-1`}>
+                {currentReservaForNotes.clienteNombre}
+              </p>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Cabaña {currentReservaForNotes.cabaña} • {formatearFecha(currentReservaForNotes.fechaEntrada)} - {formatearFecha(currentReservaForNotes.fechaSalida)}
+              </p>
+            </div>
+
+            <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
+              <p className={`${darkMode ? 'text-gray-300' : 'text-gray-800'} whitespace-pre-wrap`}>
+                {currentReservaForNotes.notas || 'Sin notas'}
+              </p>
+            </div>
+
+            <button 
+              onClick={() => setShowNotesModal(false)}
+              className="w-full mt-4 bg-blue-500 text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* RESTO DE MODALES (gastos, cambiar contraseña) */}
+      {showFormGasto && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-2xl my-8 shadow-2xl`}>
+            <h2 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-blue-800'}`}>
+              💸 Gastos - {currentMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+            </h2>
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto mb-4">
+              {categoriasGastos.map(cat => (
+                <div key={cat} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
+                  <label className={`text-sm font-bold block mb-2 ${darkMode ? 'text-gray-300' : ''}`}>{cat}</label>
+                  <input 
+                    type="text" 
+                    value={gastoMesActual?.[cat]?.toLocaleString('es-AR') || '0'} 
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/\./g, '');
+                      setGastoMesActual({ ...gastoMesActual, [cat]: parseInt(valor) || 0 });
+                    }} 
+                    className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                    placeholder="0"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border-2 border-orange-300 mb-4">
+              <p className="text-sm text-orange-700 font-bold">Total Gastos del Mes</p>
+              <p className="text-3xl font-black text-orange-900">
+                {formatearMoneda(Object.values(gastoMesActual || {}).reduce((sum, val) => sum + (val || 0), 0))}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={handleSaveGasto} 
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all"
+              >
+                Guardar Gastos
+              </button>
+              <button 
+                onClick={() => { setShowFormGasto(false); setGastoMesActual(null); }} 
+                className="flex-1 bg-gray-500 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIRMAR BORRADO */}
+      {confirmDelete.show && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-sm shadow-2xl border-2 border-red-500/30`}>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={32} className="text-red-600" />
+              </div>
+              <h2 className={`text-xl font-black mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>¿Eliminar Reserva?</h2>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Vas a eliminar la reserva de <strong className={darkMode ? 'text-white' : 'text-gray-900'}>{confirmDelete.nombre}</strong> en la Cabaña <strong className={darkMode ? 'text-white' : 'text-gray-900'}>{confirmDelete.cabana}</strong>.
+              </p>
+              <p className="text-xs text-red-500 font-bold mt-2">Esta acción no se puede deshacer.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={confirmarBorrado}
+                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-bold hover:from-red-600 hover:to-red-700 transition-all shadow-lg"
+              >
+                Sí, eliminar
+              </button>
+              <button
+                onClick={() => setConfirmDelete({ show: false, id: null, nombre: '', cabana: '' })}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-md shadow-2xl`}>
+            <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-blue-800'}`}>🔒 Cambiar Contraseña</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Contraseña Actual</label>
+                <input 
+                  type="password" 
+                  value={passwordForm.current} 
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                />
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  value={passwordForm.new} 
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                />
+              </div>
+
+              <div>
+                <label className={`text-sm font-bold block mb-1 ${darkMode ? 'text-gray-300' : ''}`}>Confirmar Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  value={passwordForm.confirm} 
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} 
+                  className={`w-full p-3 border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'} rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`} 
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={handleChangePassword} 
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all"
+                >
+                  Cambiar
+                </button>
+                <button 
+                  onClick={() => { setShowChangePassword(false); setPasswordForm({ current: '', new: '', confirm: '' }); }} 
+                  className="flex-1 bg-gray-500 text-white py-3 rounded-xl font-bold hover:bg-gray-600 transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RESTAURAR BACKUP */}
+      {showRestoreBackup && backupPreview && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-6 w-full max-w-lg shadow-2xl`}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-gradient-to-r from-orange-500 to-red-600 p-3 rounded-xl">
+                <AlertTriangle size={32} className="text-white" />
+              </div>
+              <div>
+                <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-blue-800'}`}>⚠️ Restaurar Backup</h2>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Esto reemplazará todos los datos actuales</p>
+              </div>
+            </div>
+            
+            <div className={`${darkMode ? 'bg-orange-900/30 border-orange-700' : 'bg-orange-50 border-orange-300'} border-2 rounded-xl p-4 mb-6`}>
+              <p className={`font-bold mb-3 ${darkMode ? 'text-orange-300' : 'text-orange-800'}`}>📋 Información del Backup:</p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Versión:</span>
+                  <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{backupPreview.version}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Fecha del backup:</span>
+                  <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {new Date(backupPreview.fecha).toLocaleString('es-AR')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Usuario:</span>
+                  <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{backupPreview.usuario}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Reservas:</span>
+                  <span className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>{backupPreview.cantidadReservas}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Registros de gastos:</span>
+                  <span className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-700'}`}>{backupPreview.cantidadGastos}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={`${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-300'} border-2 rounded-xl p-4 mb-6`}>
+              <p className={`font-bold text-sm ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                ⚠️ ADVERTENCIA: Esta acción NO se puede deshacer
+              </p>
+              <p className={`text-xs mt-2 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                • Se eliminarán todas las reservas actuales<br/>
+                • Se eliminarán todos los gastos actuales<br/>
+                • Se cargarán los datos del archivo de backup
+              </p>
+            </div>
+
+            <div className={`${darkMode ? 'bg-blue-900/30 border-blue-700' : 'bg-blue-50 border-blue-300'} border-2 rounded-xl p-3 mb-6`}>
+              <p className={`text-xs font-bold ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                💡 Consejo: Hacé un backup de los datos actuales ANTES de restaurar, por las dudas.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={restaurarBackup} 
+                className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 text-white py-4 rounded-xl font-bold hover:shadow-xl hover:from-orange-600 hover:to-red-700 transition-all"
+              >
+                ✅ Sí, Restaurar Backup
+              </button>
+              <button 
+                onClick={() => { 
+                  setShowRestoreBackup(false); 
+                  setBackupFile(null); 
+                  setBackupPreview(null);
+                }} 
+                className="flex-1 bg-gray-500 text-white py-4 rounded-xl font-bold hover:bg-gray-600 transition-all"
+              >
+                ❌ Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SistemaLasRocas />);
+  </script>
+</body>
+</html>
